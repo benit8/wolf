@@ -19,7 +19,6 @@
 
 #include <stdexcept>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +27,7 @@ class Game : public StateManager
 {
 public:
 	Game(int argc, char **argv)
-	: m_invokedAs(argv[0])
+	: m_execName(argv[0])
 	, m_args(argv + 1, argv + argc)
 	{
 		if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -44,6 +43,9 @@ public:
 			SDL_DestroyWindow(m_window);
 			throw std::runtime_error(SDL_GetError());
 		}
+
+		if (SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND) != 0)
+			std::cerr << "Failed to activate alpha blending: " << SDL_GetError() << std::endl;
 	}
 
 	~Game()
@@ -54,28 +56,15 @@ public:
 
 	int run()
 	{
+		if (hasStates())
+			throw std::logic_error("No game states available at startup");
+
 		m_running = true;
 		loop();
 		return m_running == false;
 	}
 
 private:
-	void handleEvents()
-	{
-		SDL_Event e;
-		while (SDL_PollEvent(&e)) {
-			switch (e.type) {
-			case SDL_QUIT:
-				m_running = false;
-				break;
-			default:
-				break;
-			}
-
-			handleEvent(e);
-		}
-	}
-
 	void loop()
 	{
 #ifdef FULL_CAPACITY
@@ -96,35 +85,51 @@ private:
 				shouldRender = true;
 			}
 
-			if (shouldRender) {
-				SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-				SDL_RenderClear(m_renderer);
-				render(m_renderer);
-				SDL_RenderPresent(m_renderer);
-			}
+			if (shouldRender)
+				renderFrame();
 		}
 #else
 		while (m_running) {
-			double now = Time::now();
+			double start = Time::now();
 
-			update(frameTime);
 			handleEvents();
+			updateStates(frameTime);
+			staticUpdateStates(frameTime);
+			renderFrame();
 
-			SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-			SDL_RenderClear(m_renderer);
-			render(m_renderer);
-			SDL_RenderPresent(m_renderer);
-
-			// Reduces CPU usage
-			double pauseTime = frameTime - (Time::now() - now);
+			double pauseTime = frameTime - (Time::now() - start);
 			if (pauseTime > DBL_EPSILON)
-				usleep(pauseTime * 1e6);
+				SDL_Delay(pauseTime * 1e3);
 		}
 #endif
 	}
 
+	void handleEvents()
+	{
+		SDL_Event e;
+		while (SDL_PollEvent(&e)) {
+			switch (e.type) {
+			case SDL_QUIT:
+				m_running = false;
+				break;
+			default:
+				break;
+			}
+
+			handleStatesEvent(e);
+		}
+	}
+
+	void renderFrame()
+	{
+		SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+		SDL_RenderClear(m_renderer);
+		renderStates(m_renderer);
+		SDL_RenderPresent(m_renderer);
+	}
+
 private:
-	std::string m_invokedAs;
+	std::string m_execName;
 	std::vector<std::string> m_args;
 
 	SDL_Window *m_window = NULL;

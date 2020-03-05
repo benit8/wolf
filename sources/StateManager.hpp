@@ -9,6 +9,7 @@
 
 #include "State.hpp"
 
+#include <algorithm>
 #include <deque>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,35 +35,50 @@ public:
 
 	void popState()
 	{
-		m_states.pop_back();
+		if (!m_states.empty())
+			m_states.pop_back();
+
+		if (m_states.empty())
+			throw std::runtime_error("No game states left");
 	}
 
 
-	void update(double delta)
+	void updateStates(double delta)
 	{
-		topState()->update(delta);
+		auto it = m_states.end();
+		for (--it; it != m_states.begin() && !(*it)->paused(); --it);
+
+		for (; it != m_states.end(); ++it)
+			(*it)->update(delta);
 	}
 
-	void handleEvent(SDL_Event e)
+	void handleStatesEvent(SDL_Event e)
 	{
-		topState()->handleEvent(e);
+		m_states.back()->handleEvent(e);
 	}
 
-	void render(SDL_Renderer *renderer)
+	void renderStates(SDL_Renderer *renderer)
 	{
-		for (auto it = m_states.rbegin(); it != m_states.rend(); ++it)
+		// Search for the first fullscreen state from the top of the stack
+		auto it = m_states.end();
+		for (--it; it != m_states.begin() && !(*it)->fullscreen(); --it);
+
+		// Render, going back to the top
+		for (; it != m_states.end(); ++it)
 			(*it)->render(renderer);
 	}
 
-	void staticUpdate(double delta)
+	void staticUpdateStates(double delta)
 	{
-		topState()->staticUpdate(delta);
+		auto it = m_states.end();
+		for (--it; it != m_states.begin() && !(*it)->paused(); --it);
+
+		for (; it != m_states.end(); ++it)
+			(*it)->staticUpdate(delta);
 	}
 
 
-
-	const State *topState() const { return m_states.back(); }
-	State *topState() { return m_states.back(); }
+	bool hasStates() const { return m_states.empty(); }
 
 private:
 	std::deque<State *> m_states;
