@@ -40,6 +40,8 @@ public:
 
 		if (m_states.empty())
 			throw std::runtime_error("No game states left");
+
+		m_states.back()->unpause();
 	}
 
 
@@ -47,6 +49,8 @@ public:
 	{
 		auto it = m_states.end();
 		for (--it; it != m_states.begin() && !(*it)->paused(); --it);
+		if (m_states.size() > 1)
+			++it;
 
 		for (; it != m_states.end(); ++it)
 			(*it)->update(delta);
@@ -64,14 +68,22 @@ public:
 		for (--it; it != m_states.begin() && !(*it)->fullscreen(); --it);
 
 		// Render, going back to the top
-		for (; it != m_states.end(); ++it)
+		for (; it != m_states.end(); ++it) {
 			(*it)->render(renderer);
+
+			if (it != m_states.end() - 1) {
+				SDL_SetRenderDrawColor(renderer, 0, 0, 0, 191);
+				SDL_RenderFillRect(renderer, NULL);
+			}
+		}
 	}
 
 	void staticUpdateStates(double delta)
 	{
 		auto it = m_states.end();
 		for (--it; it != m_states.begin() && !(*it)->paused(); --it);
+		if (m_states.size() > 1)
+			++it;
 
 		for (; it != m_states.end(); ++it)
 			(*it)->staticUpdate(delta);

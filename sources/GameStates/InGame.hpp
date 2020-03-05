@@ -10,6 +10,8 @@
 #include "Player.hpp"
 #include "State.hpp"
 
+#include "GameStates/PauseMenu.hpp"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace GameStates
@@ -42,6 +44,9 @@ public:
 		switch (e.type) {
 		case SDL_MOUSEMOTION:
 			m_player.rotate(e.motion.xrel / (200 - MouseSensitivity));
+			break;
+		case SDL_KEYDOWN:
+			handleKeydown(e.key);
 			break;
 		default:
 			break;
@@ -120,6 +125,19 @@ public:
 			}
 
 			SDL_RenderDrawLine(renderer, x, start, x, end);
+		}
+	}
+
+private:
+	void handleKeydown(SDL_KeyboardEvent e)
+	{
+		switch (e.keysym.sym) {
+		case SDLK_ESCAPE:
+			pause();
+			m_manager.pushState<PauseMenu>();
+			break;
+		default:
+			break;
 		}
 	}
 
