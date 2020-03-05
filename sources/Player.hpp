@@ -25,36 +25,36 @@ public:
 	void moveForward(const WorldMap &map, double speed)
 	{
 		Vector2f predict(m_position + m_direction * speed);
-		if (map.at(predict.x, m_position.y) == 0)
+		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
 			m_position.x = predict.x;
-		if (map.at(m_position.x, predict.y) == 0)
+		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
 			m_position.y = predict.y;
 	}
 
 	void moveBackward(const WorldMap &map, double speed)
 	{
 		Vector2f predict(m_position - m_direction * speed);
-		if (map.at(predict.x, m_position.y) == 0)
+		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
 			m_position.x = predict.x;
-		if (map.at(m_position.x, predict.y) == 0)
+		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
 			m_position.y = predict.y;
 	}
 
 	void moveLeft(const WorldMap &map, double speed)
 	{
-		Vector2f predict(m_position + m_direction.rotated(M_PI / 2) * speed);
-		if (map.at(predict.x, m_position.y) == 0)
+		Vector2f predict(m_position + m_direction.rotated(-M_PI / 2) * speed);
+		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
 			m_position.x = predict.x;
-		if (map.at(m_position.x, predict.y) == 0)
+		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
 			m_position.y = predict.y;
 	}
 
 	void moveRight(const WorldMap &map, double speed)
 	{
-		Vector2f predict(m_position + m_direction.rotated(-M_PI / 2) * speed);
-		if (map.at(predict.x, m_position.y) == 0)
+		Vector2f predict(m_position + m_direction.rotated(M_PI / 2) * speed);
+		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
 			m_position.x = predict.x;
-		if (map.at(m_position.x, predict.y) == 0)
+		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
 			m_position.y = predict.y;
 	}
 

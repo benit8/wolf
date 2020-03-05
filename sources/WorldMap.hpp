@@ -31,14 +31,17 @@ public:
 
 	~WorldMap() = default;
 
-	bool isInside(const Vector2u &pos) const
-	{
+
+	bool isInside(const Vector2u &pos) const {
 		return pos.x < m_size.x && pos.y < m_size.y;
 	}
 
-	bool isInside(const Vector2f &pos) const
-	{
+	bool isInside(const Vector2f &pos) const {
 		return pos.x >= 0 && pos.x < m_size.x && pos.y >= 0 && pos.y < m_size.y;
+	}
+
+	bool isInside(float x, float y) const {
+		return x >= 0 && x < m_size.x && y >= 0 && y < m_size.y;
 	}
 
 	const Tile &at(const Vector2u &pos) const
