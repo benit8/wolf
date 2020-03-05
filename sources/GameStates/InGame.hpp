@@ -21,18 +21,32 @@ class InGame : public State
 {
 	static constexpr double MoveSpeed = 5.0;
 	static constexpr double RotationSpeed = 3.0;
+	static constexpr double MouseSensitivity = 50.0;
 
 public:
 	explicit InGame(StateManager &m, WorldMap &&map)
 	: State(m)
 	, m_worldMap(map)
 	, m_player({20.5, 20.5}, {-1, 0})
-	{}
+	{
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+	}
 
 	~InGame()
-	{}
+	{
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+	}
 
-	void handleEvent(SDL_Event) {}
+	void handleEvent(SDL_Event e)
+	{
+		switch (e.type) {
+		case SDL_MOUSEMOTION:
+			m_player.rotate(e.motion.xrel / (200 - MouseSensitivity));
+			break;
+		default:
+			break;
+		}
+	}
 
 	void update(double elapsed)
 	{
