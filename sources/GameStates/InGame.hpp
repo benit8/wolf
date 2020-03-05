@@ -79,8 +79,14 @@ public:
 					side = true;
 				}
 
+				if (!m_worldMap.isInside(mapPos))
+					break;
+
 				hit = m_worldMap.at(mapPos) > 0;
 			}
+
+			if (!hit)
+				continue;
 
 #define PERP_WALL_DIST(O) ((mapPos.O - m_player.position().O + (1.0 - step.O) / 2.0) / rayDir.O)
 			double perpWallDist = side ? (PERP_WALL_DIST(y)) : (PERP_WALL_DIST(x));
