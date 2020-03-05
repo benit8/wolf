@@ -112,6 +112,10 @@ private:
 			case SDL_QUIT:
 				m_running = false;
 				break;
+			case SDL_KEYDOWN:
+				if (e.key.keysym.sym == SDLK_F11)
+					toggleFullscreen();
+				break;
 			default:
 				break;
 			}
@@ -126,6 +130,13 @@ private:
 		SDL_RenderClear(m_renderer);
 		renderStates(m_renderer);
 		SDL_RenderPresent(m_renderer);
+	}
+
+	void toggleFullscreen()
+	{
+		Uint32 current = SDL_GetWindowFlags(m_window);
+		Uint32 flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+		SDL_SetWindowFullscreen(m_window, (current & flag) ? 0 : flag);
 	}
 
 private:
