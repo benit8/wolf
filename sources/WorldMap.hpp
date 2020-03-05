@@ -41,7 +41,7 @@ public:
 	}
 
 	bool isInside(float x, float y) const {
-		return x >= 0 && x < m_size.x && y >= 0 && y < m_size.y;
+		return isInside(Vector2f(x, y));
 	}
 
 	const Tile &at(const Vector2u &pos) const
@@ -51,11 +51,8 @@ public:
 		return m_map.at(pos.y * m_size.x + pos.x);
 	}
 
-	const Tile &at(unsigned x, unsigned y) const
-	{
-		if (!isInside(Vector2u(x, y)))
-			std::cerr << "WorldMap: getting an out-of-bounds tile, at [" << x << "," << y << "]" << std::endl;
-		return m_map.at(y * m_size.x + x);
+	const Tile &at(unsigned x, unsigned y) const {
+		return at(Vector2u(x, y));
 	}
 
 	const Vector2u size() const { return m_size; }
