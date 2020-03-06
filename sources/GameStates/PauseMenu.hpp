@@ -41,12 +41,13 @@ public:
 
 	void render(SDL_Renderer *renderer) const
 	{
-		SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
-		SDL_RenderFillRect(renderer, &m_rect);
-	}
+		Vector2i size;
+		SDL_GetRendererOutputSize(renderer, &size.x, &size.y);
+		SDL_Rect rect = {size.x / 4, size.y / 4, size.x / 2, size.y / 2};
 
-private:
-	SDL_Rect m_rect { 320, 180, 640, 360 };
+		SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+		SDL_RenderFillRect(renderer, &rect);
+	}
 };
 
 }
