@@ -24,38 +24,22 @@ public:
 
 	void moveForward(const WorldMap &map, double speed)
 	{
-		Vector2f predict(m_position + m_direction * speed);
-		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
-			m_position.x = predict.x;
-		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
-			m_position.y = predict.y;
+		moveTo(m_position + m_direction * speed, map);
 	}
 
 	void moveBackward(const WorldMap &map, double speed)
 	{
-		Vector2f predict(m_position - m_direction * speed);
-		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
-			m_position.x = predict.x;
-		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
-			m_position.y = predict.y;
+		moveTo(m_position - m_direction * speed, map);
 	}
 
 	void moveLeft(const WorldMap &map, double speed)
 	{
-		Vector2f predict(m_position + m_direction.rotated(-M_PI / 2) * speed);
-		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
-			m_position.x = predict.x;
-		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
-			m_position.y = predict.y;
+		moveTo(m_position + m_direction.rotated(-M_PI / 2) * speed, map);
 	}
 
 	void moveRight(const WorldMap &map, double speed)
 	{
-		Vector2f predict(m_position + m_direction.rotated(M_PI / 2) * speed);
-		if (map.isInside(predict.x, m_position.y) && map.at(predict.x, m_position.y) == 0)
-			m_position.x = predict.x;
-		if (map.isInside(m_position.x, predict.y) && map.at(m_position.x, predict.y) == 0)
-			m_position.y = predict.y;
+		moveTo(m_position + m_direction.rotated(M_PI / 2) * speed, map);
 	}
 
 	void rotate(double speed)
@@ -68,6 +52,15 @@ public:
 	const Vector2f &position() const { return m_position; }
 	const Vector2f &direction() const { return m_direction; }
 	const Vector2f &plane() const { return m_plane; }
+
+private:
+	void moveTo(const Vector2f &nextPos, const WorldMap &map)
+	{
+		if (map.isInside(nextPos.x, m_position.y) && map.at(nextPos.x, m_position.y) == 0)
+			m_position.x = nextPos.x;
+		if (map.isInside(m_position.x, nextPos.y) && map.at(m_position.x, nextPos.y) == 0)
+			m_position.y = nextPos.y;
+	}
 
 private:
 	Vector2f m_position, m_direction, m_plane;
