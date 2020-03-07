@@ -25,6 +25,19 @@ class InGame : public State
 	static constexpr double RotationSpeed = 3.0;
 	static constexpr double MouseSensitivity = 50.0;
 
+	struct Ray
+	{
+		Vector2f dir;
+		Vector2u pos;
+		double distance = 0;
+		bool wallSide = false;
+
+		Ray(const Vector2f &d, const Vector2f &p)
+		: dir(d)
+		, pos(p)
+		{}
+	};
+
 public:
 	explicit InGame(StateManager &m, WorldMap &&map)
 	: State(m)
@@ -74,49 +87,16 @@ public:
 		Vector2u rendererSize(_size);
 
 		for (size_t x = 0; x < rendererSize.x; ++x) {
-			double camera = 2 * x / (double)rendererSize.x - 1.0;
-			Vector2f rayDir(m_player.direction() + m_player.plane() * camera);
-			Vector2u mapPos(m_player.position());
-			Vector2f deltaDist(std::abs(1 / rayDir.x), std::abs(1 / rayDir.y));
-
-			Vector2i step(rayDir.x < 0 ? -1 : 1, rayDir.y < 0 ? -1 : 1);
-			Vector2f sideDist(
-				rayDir.x < 0 ? (m_player.position().x - mapPos.x) * deltaDist.x : (mapPos.x + 1.0 - m_player.position().x) * deltaDist.x,
-				rayDir.y < 0 ? (m_player.position().y - mapPos.y) * deltaDist.y : (mapPos.y + 1.0 - m_player.position().y) * deltaDist.y
-			);
-
-			bool hit = false, side = false;
-			while (!hit) {
-				if (sideDist.x < sideDist.y) {
-					sideDist.x += deltaDist.x;
-					mapPos.x += step.x;
-					side = false;
-				}
-				else {
-					sideDist.y += deltaDist.y;
-					mapPos.y += step.y;
-					side = true;
-				}
-
-				if (!m_worldMap.isInside(mapPos))
-					break;
-
-				hit = m_worldMap.at(mapPos) > 0;
-			}
-
-			if (!hit)
+			auto ray = castRay(x, rendererSize.x);
+			if (ray.distance < 0)
 				continue;
 
-#define PERP_WALL_DIST(O) ((mapPos.O - m_player.position().O + (1.0 - step.O) / 2.0) / rayDir.O)
-			double perpWallDist = side ? (PERP_WALL_DIST(y)) : (PERP_WALL_DIST(x));
-#undef PERP_WALL_DIST
-
-			int lineHeight = std::min(rendererSize.y / perpWallDist, (double)rendererSize.y);
+			int lineHeight = std::min(rendererSize.y / ray.distance, (double)rendererSize.y);
 			int start = -lineHeight / 2.0 + rendererSize.y / 2.0;
 			int end   =  lineHeight / 2.0 + rendererSize.y / 2.0;
 
-			uint8_t c = side ? 128 : 255;
-			switch (m_worldMap.at(mapPos)) {
+			uint8_t c = ray.wallSide ? 128 : 255;
+			switch (m_worldMap.at(ray.pos)) {
 				case 1:  SDL_SetRenderDrawColor(renderer, c, 0, 0, 255); break;
 				case 2:  SDL_SetRenderDrawColor(renderer, 0, c, 0, 255); break;
 				case 3:  SDL_SetRenderDrawColor(renderer, 0, 0, c, 255); break;
@@ -139,6 +119,45 @@ private:
 		default:
 			break;
 		}
+	}
+
+	Ray castRay(double x, double width) const
+	{
+		double camera = 2 * x / width - 1.0;
+		Ray ray(m_player.direction() + m_player.plane() * camera, m_player.position());
+		Vector2f deltaDist(std::abs(1 / ray.dir.x), std::abs(1 / ray.dir.y));
+		Vector2i step(ray.dir.x < 0 ? -1 : 1, ray.dir.y < 0 ? -1 : 1);
+
+#define SIDE_DIST(O) (ray.dir.O < 0 ? (m_player.position().O - ray.pos.O) * deltaDist.O : (ray.pos.O + 1.0 - m_player.position().O) * deltaDist.O)
+		Vector2f sideDist(SIDE_DIST(x), SIDE_DIST(y));
+#undef SIDE_DIST
+
+		bool hit = false;
+		while (!hit) {
+			if (sideDist.x < sideDist.y) {
+				sideDist.x += deltaDist.x;
+				ray.pos.x += step.x;
+				ray.wallSide = false;
+			}
+			else {
+				sideDist.y += deltaDist.y;
+				ray.pos.y += step.y;
+				ray.wallSide = true;
+			}
+
+			if (!m_worldMap.isInside(ray.pos))
+				break;
+
+			hit = m_worldMap.at(ray.pos) > 0;
+		}
+
+#define PERP_WALL_DIST(O) ((ray.pos.O - m_player.position().O + (1.0 - step.O) / 2.0) / ray.dir.O)
+#define WALL_DIST() (ray.wallSide ? PERP_WALL_DIST(y) : PERP_WALL_DIST(x))
+		ray.distance = hit ? WALL_DIST() : -1;
+#undef PERP_WALL_DIST
+#undef WALL_DIST
+
+		return ray;
 	}
 
 private:
