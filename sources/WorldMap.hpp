@@ -55,6 +55,11 @@ public:
 		if (fread(&m_map[0], sizeof(Tile), m_size.x * m_size.y, fp) != m_size.x * m_size.y)
 			goto error;
 
+		if (fread(&m_initialPlayerPos.x, sizeof(uint16_t), 1, fp) != 1)
+			goto error;
+		if (fread(&m_initialPlayerPos.y, sizeof(uint16_t), 1, fp) != 1)
+			goto error;
+
 error:
 		fclose(fp);
 		return true;
@@ -88,14 +93,16 @@ error:
 	uint16_t width() const { return m_size.x; }
 	uint16_t height() const { return m_size.y; }
 	const std::string &title() const { return m_title; }
+	const Vector2f initialPlayerPos() const { return { m_initialPlayerPos.x + 0.5f, m_initialPlayerPos.y + 0.5f }; }
 
 private:
 	WorldMap() = default;
 
 private:
 	Vector2<uint16_t> m_size;
-	std::vector<Tile> m_map;
 	std::string m_title;
+	std::vector<Tile> m_map;
+	Vector2<uint16_t> m_initialPlayerPos;
 
 	// std::list<Entities> m_entities;
 	// std::list<GameObjects> m_gameObjects;

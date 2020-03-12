@@ -10,3 +10,5 @@ The file extension will be `w3d`, even though no check will be done.
 |Map title length|1               |
 |Map title       |`title_length`  |
 |Map data        |`width`*`height`|
+|Player initial X|2               |
+|Player initial Y|2               |

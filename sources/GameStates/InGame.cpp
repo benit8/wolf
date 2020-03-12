@@ -18,7 +18,7 @@ namespace GameStates
 InGame::InGame(StateManager &m, std::string &&mapFilename)
 : State(m)
 , m_worldMap(std::move(mapFilename))
-, m_player({20.5, 20.5}, {-1, 0})
+, m_player(m_worldMap.initialPlayerPos(), {-1, 0})
 {
 	std::cout << "Playing on map '" << m_worldMap.title() << "'" << std::endl;
 	SDL_SetRelativeMouseMode(SDL_TRUE);
