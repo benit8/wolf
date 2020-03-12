@@ -7,6 +7,10 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <cmath>
+
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename T>
 struct Vector2
 {
@@ -33,14 +37,16 @@ struct Vector2
 	, y(static_cast<T>(v.y))
 	{}
 
-	Vector2 &rotate(double a) {
+	Vector2 &rotate(double a)
+	{
 		return *this = {
 			x * cos(a) - y * sin(a),
 			x * sin(a) + y * cos(a)
 		};
 	}
 
-	Vector2 rotated(double a) const {
+	Vector2 rotated(double a) const
+	{
 		return {
 			x * cos(a) - y * sin(a),
 			x * sin(a) + y * cos(a)

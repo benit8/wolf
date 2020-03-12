@@ -9,7 +9,9 @@
 
 #include "Utils/Vector2.hpp"
 
+#include <cassert>
 #include <iostream>
+#include <string>
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,17 +21,44 @@ class WorldMap
 	typedef uint8_t Tile;
 
 public:
-	WorldMap(unsigned width, unsigned height)
-	: m_size(width, height)
-	, m_map(width * height, Tile())
-	{}
-
-	explicit WorldMap(unsigned width, unsigned height, std::vector<Tile> &&map)
-	: m_size(width, height)
-	, m_map(map)
-	{}
+	explicit WorldMap(std::string &&filename)
+	{
+		if (!loadFromFile(std::move(filename)))
+			throw std::runtime_error("Failed to load WorldMap");
+	}
 
 	~WorldMap() = default;
+
+
+	bool loadFromFile(std::string &&filename)
+	{
+		uint8_t titleLength = 0;
+		FILE *fp = fopen(filename.c_str(), "rb");
+		if (fp == NULL) {
+			fprintf(stderr, "Error opening WorldMap: %m\n");
+			return false;
+		}
+
+		if (fread(&m_size.x, sizeof(uint16_t), 1, fp) != 1)
+			goto error;
+		if (fread(&m_size.y, sizeof(uint16_t), 1, fp) != 1)
+			goto error;
+
+		if (fread(&titleLength, sizeof(uint8_t), 1, fp) != 1)
+			goto error;
+
+		m_title.assign(titleLength + 1, '\0');
+		if (fread(&m_title[0], sizeof(char), titleLength, fp) != titleLength)
+			goto error;
+
+		m_map.assign(m_size.x * m_size.y, Tile());
+		if (fread(&m_map[0], sizeof(Tile), m_size.x * m_size.y, fp) != m_size.x * m_size.y)
+			goto error;
+
+error:
+		fclose(fp);
+		return true;
+	}
 
 
 	bool isInside(const Vector2u &pos) const {
@@ -51,17 +80,22 @@ public:
 		return m_map.at(pos.y * m_size.x + pos.x);
 	}
 
-	const Tile &at(unsigned x, unsigned y) const {
+	const Tile &at(uint16_t x, uint16_t y) const {
 		return at(Vector2u(x, y));
 	}
 
-	const Vector2u size() const { return m_size; }
-	unsigned width() const { return m_size.x; }
-	unsigned height() const { return m_size.y; }
+	const Vector2<uint16_t> size() const { return m_size; }
+	uint16_t width() const { return m_size.x; }
+	uint16_t height() const { return m_size.y; }
+	const std::string &title() const { return m_title; }
 
 private:
-	Vector2u m_size;
+	WorldMap() = default;
+
+private:
+	Vector2<uint16_t> m_size;
 	std::vector<Tile> m_map;
+	std::string m_title;
 
 	// std::list<Entities> m_entities;
 	// std::list<GameObjects> m_gameObjects;

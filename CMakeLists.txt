@@ -29,6 +29,8 @@ PUBLIC
 target_sources(wolf
 PUBLIC
 	sources/main.cpp
+	sources/GameStates/InGame.cpp
+	sources/GameStates/PauseMenu.cpp
 )
 
 target_link_libraries(wolf
