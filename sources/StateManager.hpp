@@ -56,12 +56,12 @@ public:
 			(*it)->update(delta);
 	}
 
-	void handleStatesEvent(SDL_Event e)
+	void handleStatesEvent(const SDL::Event &e)
 	{
 		m_states.back()->handleEvent(e);
 	}
 
-	void renderStates(SDL_Renderer *renderer)
+	void renderStates(SDL::Texture &framebuffer)
 	{
 		// Search for the first fullscreen state from the top of the stack
 		auto it = m_states.end();
@@ -69,11 +69,12 @@ public:
 
 		// Render, going back to the top
 		for (; it != m_states.end(); ++it) {
-			(*it)->render(renderer);
+			(*it)->render(framebuffer);
 
 			if (it != m_states.end() - 1) {
-				SDL_SetRenderDrawColor(renderer, 0, 0, 0, 191);
-				SDL_RenderFillRect(renderer, NULL);
+				auto l = framebuffer.lock();
+				DrawHelper dh(l);
+				dh.fill({0, 0, 0, 191});
 			}
 		}
 	}

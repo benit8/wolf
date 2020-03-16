@@ -21,8 +21,8 @@ public:
 	~PauseMenu() = default;
 
 	void update(double) {}
-	void handleEvent(SDL_Event e);
-	void render(SDL_Renderer *renderer) const;
+	void handleEvent(const SDL::Event &e);
+	void render(SDL::Texture &framebuffer) const;
 };
 
 }

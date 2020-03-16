@@ -11,8 +11,10 @@ class StateManager;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_render.h>
+#include "DrawHelper.hpp"
+
+#include "SDL++/Events.hpp"
+#include "SDL++/Render.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,8 +24,8 @@ public:
 	virtual ~State() = default;
 
 	virtual void update(double) = 0;
-	virtual void render(SDL_Renderer *) const = 0;
-	virtual void handleEvent(SDL_Event) = 0;
+	virtual void render(SDL::Texture &) const = 0;
+	virtual void handleEvent(const SDL::Event &) = 0;
 	virtual void staticUpdate(double) {}
 
 	bool fullscreen() const { return m_fullscreen; }

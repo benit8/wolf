@@ -14,12 +14,10 @@
 template <typename T>
 struct Vector2
 {
-	T x, y;
+	T x = T(), y = T();
 
-	Vector2()
-	: x(0)
-	, y(0)
-	{}
+	Vector2() = default;
+	~Vector2() = default;
 
 	Vector2(T _x, T _y)
 	: x(_x)

@@ -6,6 +6,9 @@
 #include "GameStates/InGame.hpp"
 #include "StateManager.hpp"
 
+#include "SDL++/Mouse.hpp"
+#include "SDL++/Keyboard.hpp"
+
 #include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,19 +22,20 @@ InGame::InGame(StateManager &m, std::string &&mapFilename)
 : State(m)
 , m_worldMap(std::move(mapFilename))
 , m_player(m_worldMap.initialPlayerPos(), {-1, 0})
+, m_walls("assets/textures/walls.png")
 {
 	std::cout << "Playing on map '" << m_worldMap.title() << "'" << std::endl;
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	SDL::Mouse::setRelative(true);
 }
 
 InGame::~InGame()
 {
-	SDL_SetRelativeMouseMode(SDL_FALSE);
+	SDL::Mouse::setRelative(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void InGame::handleEvent(SDL_Event e)
+void InGame::handleEvent(const SDL::Event &e)
 {
 	switch (e.type) {
 	case SDL_MOUSEMOTION:
@@ -50,7 +54,7 @@ void InGame::update(double elapsed)
 	const double moveAmount = elapsed * MoveSpeed;
 	const double rotationAmount = elapsed * RotationSpeed;
 
-	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	const Uint8 *state = SDL::Keyboard::state();
 	if (state[SDL_SCANCODE_W]) m_player.moveForward(m_worldMap, moveAmount);
 	if (state[SDL_SCANCODE_S]) m_player.moveBackward(m_worldMap, moveAmount);
 	if (state[SDL_SCANCODE_Q]) m_player.moveLeft(m_worldMap, moveAmount);
@@ -59,35 +63,30 @@ void InGame::update(double elapsed)
 	if (state[SDL_SCANCODE_D]) m_player.rotate(rotationAmount);
 }
 
-void InGame::render(SDL_Renderer *renderer) const
+void InGame::render(SDL::Texture &framebuffer) const
 {
-	Vector2i rendererSize;
-	SDL_GetRendererOutputSize(renderer, &rendererSize.x, &rendererSize.y);
+	auto fb = framebuffer.lock();
+	auto wl = m_walls.lock();
+	DrawHelper dh(fb);
 
-	for (int x = 0; x < rendererSize.x; ++x) {
-		auto ray = castRay(x, rendererSize.x);
+	for (int x = 0; x < fb.width(); ++x) {
+		auto ray = castRay(x, fb.width());
 		if (ray.distance < 0)
 			continue;
 
-		int lineHeight = std::min(rendererSize.y / ray.distance, (double)rendererSize.y);
-		int start = -lineHeight / 2.0 + rendererSize.y / 2.0;
-		int end   =  lineHeight / 2.0 + rendererSize.y / 2.0;
+		assert(m_worldMap.at(ray.pos) > 0);
 
-		uint8_t c = ray.wallSide ? 128 : 255;
-		switch (m_worldMap.at(ray.pos)) {
-			case 1:  SDL_SetRenderDrawColor(renderer, c, 0, 0, 255); break;
-			case 2:  SDL_SetRenderDrawColor(renderer, 0, c, 0, 255); break;
-			case 3:  SDL_SetRenderDrawColor(renderer, 0, 0, c, 255); break;
-			case 4:  SDL_SetRenderDrawColor(renderer, c, c, c, 255); break;
-			default: SDL_SetRenderDrawColor(renderer, c, c, 0, 255); break;
-		}
-		SDL_RenderDrawLine(renderer, x, start, x, end);
+		int lineHeight = fb.height() / ray.distance;
+		int start = std::max(-lineHeight / 2.0 + fb.height() / 2.0, 0.0);
+		int end   = std::min( lineHeight / 2.0 + fb.height() / 2.0, (double)fb.height() - 1);
+
+		renderWall(fb, x, ray, lineHeight, start, end, wl);
 	}
 }
 
 ////////////////////////////////////////////////////////////
 
-void InGame::handleKeydown(SDL_KeyboardEvent e)
+void InGame::handleKeydown(const SDL_KeyboardEvent &e)
 {
 	switch (e.keysym.sym) {
 	case SDLK_ESCAPE:
@@ -136,6 +135,35 @@ InGame::Ray InGame::castRay(double x, double width) const
 #undef WALL_DIST
 
 	return ray;
+}
+
+void InGame::renderWall(const SDL::Texture::Lock &fb, int x, const Ray &ray, int lineHeight, int start, int end, const SDL::Surface::Lock &wl) const
+{
+	size_t textureIndex = m_worldMap.at(ray.pos) - 1;
+	double wallHitX = ray.wallSide ? m_player.position().x + ray.distance * ray.dir.x : m_player.position().y + ray.distance * ray.dir.y;
+	wallHitX -= floor(wallHitX);
+
+	Vector2i texPoint(wallHitX * (double)m_textureSize.x, 0);
+	if (!ray.wallSide && ray.dir.x > 0)
+		texPoint.x = m_textureSize.x - texPoint.x - 1;
+	if (ray.wallSide && ray.dir.y < 0)
+		texPoint.x = m_textureSize.x - texPoint.x - 1;
+
+	double step = 1.0 * m_textureSize.y / lineHeight;
+	double texPos = (start - fb.height() / 2.0 + lineHeight / 2.0) * step;
+	for (int y = start; y < end; y++) {
+		texPoint.y = (int)texPos & (m_textureSize.y - 1);
+		texPos += step;
+
+		auto color = wl.at(textureIndex * m_textureSize.x + texPoint.x, texPoint.y).color();
+		if (ray.wallSide) {
+			color.r /= 2;
+			color.g /= 2;
+			color.b /= 2;
+		}
+
+		fb.at(x, y) = color;
+	}
 }
 
 }

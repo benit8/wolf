@@ -9,6 +9,8 @@ cmake_policy(SET CMP0076 NEW)
 project(wolf VERSION 0.1.0 LANGUAGES CXX)
 add_executable(wolf)
 
+add_subdirectory(extern)
+
 target_compile_features(wolf
 PRIVATE
 	cxx_std_17
@@ -24,16 +26,18 @@ PRIVATE
 target_include_directories(wolf
 PUBLIC
 	./sources
+	/home/benito/Desktop/SDL++/sources
 )
 
 target_sources(wolf
 PUBLIC
 	sources/main.cpp
+	sources/Game.cpp
 	sources/GameStates/InGame.cpp
 	sources/GameStates/PauseMenu.cpp
 )
 
 target_link_libraries(wolf
 PUBLIC
-	SDL2
+	SDL++
 )

@@ -12,6 +12,8 @@
 
 #include "GameStates/PauseMenu.hpp"
 
+#include "SDL++/Surface.hpp"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace GameStates
@@ -24,6 +26,8 @@ class InGame : public State
 	static constexpr double MoveSpeed = 5.0;
 	static constexpr double RotationSpeed = 3.0;
 	static constexpr double MouseSensitivity = 50.0;
+
+	const Vector2u m_textureSize {64, 64};
 
 	struct Ray
 	{
@@ -42,17 +46,19 @@ public:
 	explicit InGame(StateManager &m, std::string &&mapFilename);
 	~InGame();
 
-	void handleEvent(SDL_Event e);
+	void handleEvent(const SDL::Event &e);
 	void update(double elapsed);
-	void render(SDL_Renderer *renderer) const;
+	void render(SDL::Texture &framebuffer) const;
 
 private:
-	void handleKeydown(SDL_KeyboardEvent e);
+	void handleKeydown(const SDL_KeyboardEvent &e);
 	Ray castRay(double x, double width) const;
+	void renderWall(const SDL::Texture::Lock &fb, int x, const Ray &ray, int lineHeight, int start, int end, const SDL::Surface::Lock &wl) const;
 
 private:
 	WorldMap m_worldMap;
 	Player m_player;
+	SDL::Surface m_walls;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

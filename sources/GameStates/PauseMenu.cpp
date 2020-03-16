@@ -22,7 +22,7 @@ PauseMenu::PauseMenu(StateManager &m)
 
 ////////////////////////////////////////////////////////////
 
-void PauseMenu::handleEvent(SDL_Event e)
+void PauseMenu::handleEvent(const SDL::Event &e)
 {
 	switch (e.type) {
 	case SDL_KEYDOWN:
@@ -34,14 +34,11 @@ void PauseMenu::handleEvent(SDL_Event e)
 	}
 }
 
-void PauseMenu::render(SDL_Renderer *renderer) const
+void PauseMenu::render(SDL::Texture &framebuffer) const
 {
-	Vector2i size;
-	SDL_GetRendererOutputSize(renderer, &size.x, &size.y);
-	SDL_Rect rect = {size.x / 4, size.y / 4, size.x / 2, size.y / 2};
-
-	SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
-	SDL_RenderFillRect(renderer, &rect);
+	auto l = framebuffer.lock();
+	DrawHelper dh(l);
+	dh.fill({l.width() / 4, l.height() / 4, l.width() / 2, l.height() / 2}, {100, 100, 100});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
