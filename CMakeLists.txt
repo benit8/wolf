@@ -26,7 +26,6 @@ PRIVATE
 target_include_directories(wolf
 PUBLIC
 	./sources
-	/home/benito/Desktop/SDL++/sources
 )
 
 target_sources(wolf
